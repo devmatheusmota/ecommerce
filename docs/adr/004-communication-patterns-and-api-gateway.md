@@ -39,3 +39,4 @@ We need clear rules for how clients talk to the system and how services talk to 
 - Proto definitions will live in `shared/proto/` or similar for reuse
 - Kong must be deployed and configured before client-facing features; can be added to Docker Compose and K8s
 - When designing a flow, choose: client need → HTTP via Kong; sync service call → gRPC; async/event → RabbitMQ
+- **Auth**: Kong validates the JWT and forwards the subject (user ID) to upstream via a header (e.g. `X-User-ID`). Services behind Kong trust this header and do not validate JWT; they focus on business logic only.

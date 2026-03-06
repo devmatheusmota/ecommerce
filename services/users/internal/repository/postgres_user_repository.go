@@ -58,3 +58,19 @@ func isUniqueViolation(err error) bool {
 	}
 	return false
 }
+
+func (r *PostgresUserRepository) GetByID(id string) (*domain.User, error) {
+	var u domain.User
+	err := r.db.QueryRow(`
+		SELECT id, email, name, phone, cpf, password_hash
+		FROM users WHERE id = $1
+	`, id).Scan(&u.ID, &u.Email, &u.Name, &u.Phone, &u.CPF, &u.PasswordHash)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, domain.ErrUserNotFound
+		}
+		return nil, err
+	}
+	return &u, nil
+}

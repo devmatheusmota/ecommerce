@@ -53,6 +53,7 @@ func (u *LoginUser) Execute(in LoginUserInput) (*LoginUserOutput, error) {
 
 	expireAt := time.Now().Add(time.Hour * 24)
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss": "users", // Kong JWT plugin matches consumer by this claim (key_claim_name, default "iss")
 		"sub": user.ID,
 		"exp": expireAt.Unix(),
 	}).SignedString([]byte(secret))

@@ -1,10 +1,29 @@
 # Kong Gateway — declarative config
 # Imported via kong config db_import at startup (kong-seed)
+#
+# JWT: Consumer "users" must use the same secret as the users service (JWT_SECRET in .env).
+# For local dev, set JWT_SECRET=dev in services/users/.env and use secret "dev" below (or the same value).
+#
+# Path routing (no request-transformer needed for normal routes):
+# The catch-all route /v1/users uses strip_path: true, so Kong strips the prefix and forwards the suffix:
+#   GET /v1/users/login    → upstream /login
+#   POST /v1/users/register → upstream /register
+#   GET /v1/users/health   → upstream /health
+# This is the standard Kong pattern ("rename endpoint via Route + strip_path").
+#
+# Exception: /v1/users/me has its own route for JWT protection. Because the full path is stripped
+# (exact match → nothing left), a request-transformer sets the upstream URI to /me.
 
 _format_version: "3.0"
 
+consumers:
+  - username: users
+    jwt_secrets:
+      - key: users
+        algorithm: HS256
+        secret: "dev"
+
 services:
-  # Kong health — validates gateway routing (placeholder upstream)
   - name: health
     url: https://httpbin.org/status/200
     routes:
@@ -13,11 +32,91 @@ services:
           - /health
         strip_path: true
 
-  # Users (auth) service — apply rate limit here for testing
   - name: users
     url: http://users:8080
     routes:
+      # Specific routes come before the catch-all so they match first.
+      # strip_path: true removes the full path → upstream path is empty; request-transformer sets the correct URI.
+      - name: users-me-route
+        paths:
+          - /v1/users/me
+        strip_path: true
+        methods:
+          - GET
+      # users-login-route and users-register-route are explicit so plugins (e.g. rate limit) can be
+      # attached to each individually via the Kong UI without affecting other paths.
+      - name: users-login-route
+        paths:
+          - /v1/users/login
+        strip_path: true
+        methods:
+          - POST
+      - name: users-register-route
+        paths:
+          - /v1/users/register
+        strip_path: true
+        methods:
+          - POST
+      # Catch-all: strip_path removes /v1/users prefix, forwarding the suffix to the upstream.
+      # GET /v1/users/health → /health, GET /v1/users/docs → /docs, etc.
       - name: users-route
         paths:
           - /v1/users
         strip_path: true
+        methods:
+          - GET
+          - POST
+
+plugins:
+  - name: request-transformer
+    route: users-me-route
+    config:
+      replace:
+        uri: "/me"
+
+  - name: request-transformer
+    route: users-login-route
+    config:
+      replace:
+        uri: "/login"
+
+  - name: request-transformer
+    route: users-register-route
+    config:
+      replace:
+        uri: "/register"
+
+  - name: jwt
+    route: users-me-route
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+
+  - name: pre-function
+    route: users-me-route
+    config:
+      access:
+        - |
+          local auth = kong.request.get_header("authorization")
+          if auth and auth ~= "" then
+            local token = auth:gsub("^[Bb]earer%s+", "")
+            local parts = {}
+            for p in (token .. "."):gmatch("(.-)%.") do
+              parts[#parts + 1] = p
+            end
+            if #parts >= 2 then
+              local payload = parts[2]:gsub("-", "+"):gsub("_", "/")
+              local pad = (#payload % 4)
+              if pad > 0 then
+                payload = payload .. string.rep("=", 4 - pad)
+              end
+              local decoded = ngx.decode_base64(payload)
+              if decoded then
+                local sub = decoded:match('"sub"%s*:%s*"([^"]+)"')
+                if sub then
+                  kong.service.request.set_header("X-User-ID", sub)
+                end
+              end
+            end
+          end

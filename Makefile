@@ -1,4 +1,4 @@
-.PHONY: up down dev dev-down logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down
+.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down kong-test
 
 # Version for dev: from latest git tag (e.g. 1.0.1 or 1.0.1-2-gabc123). Exported so docker-compose.dev.yml can use ${VERSION}.
 VERSION := $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo "dev")
@@ -17,6 +17,16 @@ dev:
 
 dev-down:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+
+restart-dev:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+# Remove Kong's DB volume so kong-seed can re-import cleanly. Use when kong-seed fails with "UNIQUE violation on key".
+kong-reset:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+	docker volume rm ecommerce_kong_data 2>/dev/null || true
+	@echo "Kong volume removed. Run 'make dev' or 'make restart-dev' to start fresh."
 
 logs:
 	docker compose logs -f
