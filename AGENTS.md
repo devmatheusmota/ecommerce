@@ -22,7 +22,7 @@ A learning project to master full-cycle development: application, deploy, observ
 
 ## Communication Patterns
 
-- **Client → App**: HTTP only. Clients (web, mobile, external APIs) talk to the application exclusively via HTTP through Kong API Gateway
+- **Client → App**: HTTP only. Clients (web, mobile, external APIs) talk to the application exclusively via HTTP through Kong API Gateway. Backend services do not expose HTTP ports to the host; only Kong is exposed (e.g. port 8000), so clients cannot reach services directly.
 - **Service → Service (sync)**: gRPC. When a service needs a direct, synchronous response from another, use gRPC
 - **Service → Service (async)**: RabbitMQ. Domain events, eventual consistency, fire-and-forget — use the message broker
 
@@ -105,6 +105,7 @@ ecommerce/
 ## Code Conventions
 
 - **Language**: Code, comments, and docs in **English**
+- **Variable names**: No abbreviations — use full names (e.g. `userRepository`, `registerUserUseCase` instead of `userRepo`, `registerUC`)
 - **Commits**: Clear messages; prefer Conventional Commits (`feat:`, `fix:`, `docs:`)
 - **Client-facing APIs**: REST with versioning (`/v1/orders`); OpenAPI/Swagger for documentation; exposed via Kong
 - **Service-to-service**: gRPC with protobuf; proto files in `shared/proto/` or per-service
@@ -115,6 +116,8 @@ ecommerce/
 ## Learned User Preferences
 
 *(Section for preferences extracted from conversations over time)*
+
+- **Variable naming**: No abbreviated variable names (prefer `userRepository` over `userRepo`, `registerUserUseCase` over `registerUC`)
 
 
 ---

@@ -103,6 +103,12 @@ user, err := uc.Execute(input)
 
 ---
 
+## Code Style
+
+- **Variable names**: No abbreviations — use full names (e.g. `userRepository`, `registerUserUseCase` instead of `userRepo`, `registerUC`)
+
+---
+
 ## References
 
 - ADR-005: Service Layer Architecture

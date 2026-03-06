@@ -5,7 +5,7 @@ A learning project for distributed architecture and full-cycle development: Go, 
 ## Prerequisites
 
 - Docker and Docker Compose
-- Go 1.21+ (when building services)
+- Go 1.26+ (when building services)
 - kubectl + minikube or kind (for Kubernetes)
 
 ## Quick Start
