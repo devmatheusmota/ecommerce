@@ -108,6 +108,7 @@ ecommerce/
 - **Variable names**: No abbreviations — use full names (e.g. `userRepository`, `registerUserUseCase` instead of `userRepo`, `registerUC`)
 - **Dates / timestamps**: When the same logical instant is used in multiple places (e.g. JWT exp and response expire_at), compute once and reuse — keep dates consistent.
 - **Commits**: Clear messages; prefer Conventional Commits (`feat:`, `fix:`, `docs:`)
+- **Versioning on commit**: When the user asks to commit (or to "commitar", "dar commit"), always manage version: create a new git tag following existing sequence (e.g. `v1.1.0` → `v1.2.0` for a feature, `v1.1.1` for a fix). List current tags (`git tag --sort=-v:refname`), pick the next version, commit, then `git tag vX.Y.Z <commit>`. Prefer all tags with the `v` prefix (e.g. `v1.0.0`).
 - **Client-facing APIs**: REST with versioning (`/v1/orders`); OpenAPI/Swagger for documentation; exposed via Kong
 - **Service-to-service**: gRPC with protobuf; proto files in `shared/proto/` or per-service
 - **Config**: Environment variables; no secrets in code
