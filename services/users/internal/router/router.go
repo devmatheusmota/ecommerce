@@ -18,10 +18,12 @@ func New(db *sql.DB) http.Handler {
 
 	userRepository := repository.NewPostgresUserRepository(db)
 	registerUsecase := usecase.NewRegisterUser(userRepository)
+	loginUsecase := usecase.NewLoginUser(userRepository)
 
 	r.Get("/health", handlers.Health)
 	r.Get("/docs", openapi.Handler())
 	r.Post("/register", handlers.Register(registerUsecase))
+	r.Post("/login", handlers.Login(loginUsecase))
 
 	return r
 }
