@@ -60,6 +60,18 @@ A learning project to master full-cycle development: application, deploy, observ
 
 ---
 
+## Service Layer Architecture
+
+Each microservice follows a layered structure for testability and decoupling (see [ADR-005](docs/adr/005-service-layer-architecture.md), [docs/architecture.md](docs/architecture.md)):
+
+- **Handlers**: HTTP only — parse request, delegate to use case, map response
+- **Use cases**: Business logic, validation orchestration; depend on repository **interfaces**
+- **Repository**: Persistence (Postgres); implements interfaces for mockable unit tests
+- **Validation**: Input validation rules; used by use cases
+- **Domain**: Entities and domain errors; no outer dependencies
+
+---
+
 ## Repository Structure (planned)
 
 ```

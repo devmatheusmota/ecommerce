@@ -32,6 +32,6 @@ make k8s-status
 ## Project Structure
 
 - [AGENTS.md](AGENTS.md) — Full context for AI agents
+- [docs/architecture.md](docs/architecture.md) — Service layer architecture (handlers, use cases, repository, domain)
 - [docs/adr/](docs/adr/) — Architecture decisions
 - [docs/project-plan.md](docs/project-plan.md) — Features, microservices, tasks, and implementation order
-- [docs/business-rules.md](docs/business-rules.md) — Domain and business rules

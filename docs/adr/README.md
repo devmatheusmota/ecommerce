@@ -20,3 +20,4 @@ Each ADR is a markdown file named `XXX-title.md` (e.g. `001-initial-stack.md`) w
 | 002 | [Repository Structure](002-repository-structure.md) |
 | 003 | [Local Development vs Kubernetes](003-local-vs-kubernetes.md) |
 | 004 | [Communication Patterns and API Gateway](004-communication-patterns-and-api-gateway.md) |
+| 005 | [Service Layer Architecture](005-service-layer-architecture.md) |
