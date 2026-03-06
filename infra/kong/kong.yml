@@ -1,0 +1,23 @@
+# Kong Gateway — declarative config
+# Imported via kong config db_import at startup (kong-seed)
+
+_format_version: "3.0"
+
+services:
+  # Kong health — validates gateway routing (placeholder upstream)
+  - name: health
+    url: https://httpbin.org/status/200
+    routes:
+      - name: health-route
+        paths:
+          - /health
+        strip_path: true
+
+  # Users (auth) service — apply rate limit here for testing
+  - name: users
+    url: http://users:8080
+    routes:
+      - name: users-route
+        paths:
+          - /v1/users
+        strip_path: true

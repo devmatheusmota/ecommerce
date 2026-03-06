@@ -1,0 +1,164 @@
+networks:
+  ecommerce-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce_dev
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ecommerce-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ecommerce
+      RABBITMQ_DEFAULT_PASS: ecommerce_dev
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  kong-database:
+    image: postgres:16-alpine
+    container_name: ecommerce-kong-db
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong_dev
+      POSTGRES_DB: kong
+    ports:
+      - "5433:5432"
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  kong-bootstrap:
+    image: kong/kong-gateway:3.7
+    container_name: ecommerce-kong-bootstrap
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: "5432"
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_dev
+      KONG_PASSWORD: kong_admin
+    command: kong migrations bootstrap
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - ecommerce-net
+
+  kong-seed:
+    image: kong/kong-gateway:3.7
+    container_name: ecommerce-kong-seed
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: "5432"
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_dev
+    command: kong config db_import /kong/declarative/kong.yml
+    volumes:
+      - ./infra/kong:/kong/declarative:ro
+    depends_on:
+      kong-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - ecommerce-net
+    restart: "no"
+
+  kong:
+    image: kong/kong-gateway:3.7
+    depends_on:
+      kong-seed:
+        condition: service_completed_successfully
+      users:
+        condition: service_healthy
+    container_name: ecommerce-kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: "5432"
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_dev
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002, 0.0.0.0:8445 ssl"
+      KONG_ADMIN_GUI_URL: "http://localhost:8002"
+      # RBAC + Kong Manager auth require Kong Enterprise license; in OSS these are ignored (no login)
+      KONG_ENFORCE_RBAC: "on"
+      KONG_ADMIN_GUI_AUTH: basic-auth
+      KONG_ADMIN_GUI_SESSION_CONF: '{"secret":"kong","cookie_secure":false,"storage":"kong"}'
+      KONG_PASSWORD: kong_admin
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+    ports:
+      - "8000:8000"   # Proxy HTTP
+      - "8443:8443"   # Proxy HTTPS
+      - "8001:8001"   # Admin API HTTP
+      - "8444:8444"   # Admin API HTTPS
+      - "8002:8002"   # Kong Manager (UI)
+      - "8445:8445"   # Kong Manager HTTPS
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  users:
+    build:
+      context: .
+      dockerfile: docker/services/users/Dockerfile
+    container_name: ecommerce-users
+    environment:
+      PORT: "8080"
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - ecommerce-net
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  kong_data:
