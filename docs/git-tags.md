@@ -46,29 +46,29 @@ git push origin --tags     # todas as tags que ainda não estão no remoto
 
 ## Usar a tag na versão do build
 
-Ao fazer o build da imagem (produção), injete a versão com a tag atual:
+Ao fazer o build da imagem (produção), use **`make build`**: a versão vem do Git (mesma lógica do dev) e a imagem é taggeada como `ecommerce-users:$(VERSION)`.
 
 ```bash
-# Exemplo: versão a partir da tag mais recente
-VERSION=$(git describe --tags --always)
-docker build --build-arg VERSION="$VERSION" -f docker/services/users/Dockerfile .
+make build   # usa git describe --tags --always, gera ecommerce-users:1.0.1 (ou dev)
 ```
 
-Ou com tag explícita:
+O `make up` também usa essa versão: o Makefile exporta `VERSION` e o `docker-compose.yml` passa `args.VERSION` para o build do serviço users.
+
+Para uma tag explícita (sem Git):
 
 ```bash
-docker build --build-arg VERSION=1.0.0 -f docker/services/users/Dockerfile .
+VERSION=1.0.0 make build
 ```
 
 ---
 
-## Versão em dev (dev-1.0.0)
+## Versão em dev (automática a partir do Git)
 
-No ambiente de desenvolvimento (Air, `make dev`), o binário não é buildado com `-ldflags`, então a versão vem da **variável de ambiente** `VERSION`.
+No ambiente de desenvolvimento (`make dev`), a versão **não é mais hardcoded**: o Makefile exporta `VERSION` usando `git describe --tags --always` (última tag + commits, ex.: `1.0.1` ou `1.0.1-2-gabc123`). O `docker-compose.dev.yml` usa `VERSION: "${VERSION:-dev}"`.
 
-- No **docker-compose.dev.yml** está algo como `VERSION: "dev-1.0.0"`.
-- Quando você criar a tag `1.0.0`, pode deixar em dev como `dev-1.0.0` para indicar “ambiente dev, alinhado à release 1.0.0”.
-- Ao lançar a próxima release (ex.: `1.1.0`), altere para `VERSION: "dev-1.1.0"` se quiser refletir a última release no dev.
+- Ao rodar **`make dev`**, a API exibe no `meta.version` o resultado do Git (ex.: `1.0.0`, `1.0.1`, `1.0.1-2-gabc123`).
+- Se não houver tags ou o comando falhar, cai para `"dev"`.
+- Não é necessário alterar nenhum arquivo ao criar uma nova tag; basta rodar `make dev` de novo.
 
 ---
 

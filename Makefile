@@ -1,4 +1,8 @@
-.PHONY: up down dev dev-down logs k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down
+.PHONY: up down dev dev-down logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down
+
+# Version for dev: from latest git tag (e.g. 1.0.1 or 1.0.1-2-gabc123). Exported so docker-compose.dev.yml can use ${VERSION}.
+VERSION := $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo "dev")
+export VERSION
 
 # --- Docker Compose (local dev) ---
 up:
@@ -32,6 +36,15 @@ migrate-users-down:
 kong-test:
 	@code=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health 2>/dev/null); \
 	if [ "$$code" = "200" ]; then echo "Kong OK — HTTP $$code"; else echo "Kong FAIL — gateway unreachable (run 'make up'?)"; fi
+
+# --- Build (official/release: version from git) ---
+# Builds the users service image with VERSION from git (same as dev). Image tagged as ecommerce-users:$(VERSION).
+# Use for release: make build, then push the image to your registry.
+build: build-users
+
+build-users:
+	docker build --build-arg VERSION=$(VERSION) -t ecommerce-users:$(VERSION) -f docker/services/users/Dockerfile .
+	@echo "Built ecommerce-users:$(VERSION)"
 
 # --- Kubernetes (minikube/kind) ---
 k8s-apply:

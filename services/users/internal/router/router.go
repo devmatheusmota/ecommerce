@@ -1,3 +1,4 @@
+// Package router configures HTTP routes for the users service.
 package router
 
 import (

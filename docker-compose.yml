@@ -147,6 +147,8 @@ services:
     build:
       context: .
       dockerfile: docker/services/users/Dockerfile
+      args:
+        VERSION: ${VERSION:-dev}
     container_name: ecommerce-users
     env_file:
       - services/users/.env
