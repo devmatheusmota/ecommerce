@@ -51,13 +51,13 @@ func (u *LoginUser) Execute(in LoginUserInput) (*LoginUserOutput, error) {
 		return nil, fmt.Errorf("JWT_SECRET is not set")
 	}
 
+	expireAt := time.Now().Add(time.Hour * 24)
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": expireAt.Unix(),
 	}).SignedString([]byte(secret))
 	if err != nil {
 		return nil, err
 	}
-
-	return &LoginUserOutput{Token: token, ExpireAt: time.Now().Add(time.Hour * 24)}, nil
+	return &LoginUserOutput{Token: token, ExpireAt: expireAt}, nil
 }

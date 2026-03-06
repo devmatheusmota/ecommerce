@@ -106,6 +106,7 @@ ecommerce/
 
 - **Language**: Code, comments, and docs in **English**
 - **Variable names**: No abbreviations — use full names (e.g. `userRepository`, `registerUserUseCase` instead of `userRepo`, `registerUC`)
+- **Dates / timestamps**: When the same logical instant is used in multiple places (e.g. JWT exp and response expire_at), compute once and reuse — keep dates consistent.
 - **Commits**: Clear messages; prefer Conventional Commits (`feat:`, `fix:`, `docs:`)
 - **Client-facing APIs**: REST with versioning (`/v1/orders`); OpenAPI/Swagger for documentation; exposed via Kong
 - **Service-to-service**: gRPC with protobuf; proto files in `shared/proto/` or per-service

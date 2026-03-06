@@ -114,6 +114,7 @@ user, err := uc.Execute(input)
 ## Code Style
 
 - **Variable names**: No abbreviations — use full names (e.g. `userRepository`, `registerUserUseCase` instead of `userRepo`, `registerUC`)
+- **Dates / timestamps**: When the same logical instant is used in more than one place (e.g. JWT `exp` and API response `expire_at`), compute it once and reuse — avoid multiple `time.Now().Add(...)` so values stay consistent.
 
 ---
 

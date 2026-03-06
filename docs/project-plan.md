@@ -26,7 +26,7 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 
 ### 2.1 Users
 - [x] User registration (email, password, name, phone, CPF with validation)
-- [ ] Login / JWT tokens
+- [x] Login / JWT tokens
 - [ ] Profile (GET /me, update name/phone/CPF)
 - [ ] Addresses (CRUD, default)
 - [ ] Password reset
@@ -189,7 +189,7 @@ Use this as a backlog. Check off as you go.
 ### Users
 - [x] users service skeleton (Go, chi, Postgres)
 - [x] POST /register (email, password, name, phone, CPF; validation + duplicate email 409)
-- [ ] POST /login (returns JWT)
+- [x] POST /login (returns JWT)
 - [ ] GET /me (profile, requires JWT)
 - [ ] CRUD addresses
 - [ ] K8s Deployment + Service
