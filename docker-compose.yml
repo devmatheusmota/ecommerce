@@ -7,15 +7,16 @@ services:
     image: postgres:16-alpine
     container_name: ecommerce-postgres
     environment:
-      POSTGRES_USER: ecommerce
-      POSTGRES_PASSWORD: ecommerce_dev
-      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ${POSTGRES_USER:-ecommerce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecommerce_dev}
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ecommerce -d ecommerce"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecommerce} -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -146,8 +147,13 @@ services:
       context: .
       dockerfile: docker/services/users/Dockerfile
     container_name: ecommerce-users
+    env_file:
+      - services/users/.env
     environment:
       PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8081:8080"
     healthcheck:

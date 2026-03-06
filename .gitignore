@@ -1,5 +1,4 @@
 # Go
-/services/users/internal/
 *.exe
 *.exe~
 *.dll

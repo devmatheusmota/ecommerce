@@ -6,11 +6,22 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ecommerce/services/users/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
+	db, err := database.Open()
+	if err != nil {
+		log.Fatal("database:", err)
+	}
+	defer db.Close()
+
+	if err := database.Migrate(db); err != nil {
+		log.Fatal("migrate:", err)
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
