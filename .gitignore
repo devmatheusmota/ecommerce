@@ -1,4 +1,6 @@
 # Go
+services/users/tmp/
+services/users/build-errors.log
 *.exe
 *.exe~
 *.dll

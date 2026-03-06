@@ -1,0 +1,16 @@
+# Dev mode: users service with hot reload (Air)
+# Use: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Or: make dev
+# Client HTTP still goes only through Kong (8000). To debug users directly, add:
+#   ports: - "8081:8080"
+
+services:
+  users:
+    build:
+      context: .
+      dockerfile: docker/services/users/Dockerfile.dev
+    volumes:
+      - ./services/users:/app
+    healthcheck:
+      interval: 15s
+      start_period: 30s

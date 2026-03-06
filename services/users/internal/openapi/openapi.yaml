@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: Users Service API
+  description: Auth, profiles, and addresses for the e-commerce marketplace
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+    description: Local (direct)
+  - url: http://localhost:8000/v1/users
+    description: Via Kong
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: users
+                  version:
+                    type: string
+                    example: "1.0.0"
+  /register:
+    post:
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+                - phone
+                - cpf
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: secret123
+                name:
+                  type: string
+                  example: John Doe
+                phone:
+                  type: string
+                  example: "11999999999"
+                cpf:
+                  type: string
+                  example: "12345678900"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  email:
+                    type: string
+                  name:
+                    type: string
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: email already registered

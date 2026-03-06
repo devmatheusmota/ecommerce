@@ -1,11 +1,18 @@
-.PHONY: up down logs k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down
+.PHONY: up down dev dev-down logs k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down
 
 # --- Docker Compose (local dev) ---
 up:
-	docker compose up -d
+	docker compose up -d --build --force-recreate --remove-orphans
 
 down:
 	docker compose down
+
+# Dev mode: users service with hot reload (Air) — code changes reflect without rebuild
+dev:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+dev-down:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 
 logs:
 	docker compose logs -f
