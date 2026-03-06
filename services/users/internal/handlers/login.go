@@ -8,6 +8,7 @@ import (
 
 	"github.com/ecommerce/services/users/internal/domain"
 	"github.com/ecommerce/services/users/internal/usecase"
+	"github.com/ecommerce/services/users/internal/validation"
 )
 
 type LoginRequest struct {
@@ -33,8 +34,14 @@ func Login(uc *usecase.LoginUser) http.HandlerFunc {
 			return
 		}
 
+		email, err := validation.ValidateLoginInput(req.Email, req.Password)
+		if err != nil {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+
 		output, err := uc.Execute(usecase.LoginUserInput{
-			Email: req.Email, Password: req.Password,
+			Email: email, Password: req.Password,
 		})
 		if err != nil {
 			respondLoginError(w, err)
@@ -48,10 +55,7 @@ func Login(uc *usecase.LoginUser) http.HandlerFunc {
 }
 
 func respondLoginError(w http.ResponseWriter, err error) {
-	var valErr domain.ErrValidation
 	switch {
-	case errors.As(err, &valErr):
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 	default:

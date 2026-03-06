@@ -13,7 +13,7 @@ func respondJSON(w http.ResponseWriter, status int, body any) {
 		"data": body,
 		"meta": map[string]string{
 			"timestamp": time.Now().Format(time.RFC3339),
-			"version":   "1.0.0",
+			"version":   VersionString(),
 		},
 	})
 }

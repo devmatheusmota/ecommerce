@@ -1,13 +1,10 @@
 package validation
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/ecommerce/services/users/internal/domain"
 )
-
-var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 type RegisterInput struct {
 	Email    string
@@ -18,13 +15,11 @@ type RegisterInput struct {
 }
 
 func ValidateRegisterInput(in *RegisterInput) error {
-	in.Email = strings.TrimSpace(strings.ToLower(in.Email))
-	if in.Email == "" {
-		return domain.ErrValidation("email is required")
+	email, err := ValidateEmail(in.Email)
+	if err != nil {
+		return err
 	}
-	if !emailRegex.MatchString(in.Email) {
-		return domain.ErrValidation("invalid email format")
-	}
+	in.Email = email
 	if len(in.Password) < 6 {
 		return domain.ErrValidation("password must be at least 6 characters")
 	}

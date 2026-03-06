@@ -64,10 +64,10 @@ A learning project to master full-cycle development: application, deploy, observ
 
 Each microservice follows a layered structure for testability and decoupling (see [ADR-005](docs/adr/005-service-layer-architecture.md), [docs/architecture.md](docs/architecture.md)):
 
-- **Handlers**: HTTP only — parse request, delegate to use case, map response
-- **Use cases**: Business logic, validation orchestration; depend on repository **interfaces**
+- **Handlers**: HTTP + input validation (required, format); delegate to use case, map response
+- **Use cases**: Domain / business logic only; depend on repository **interfaces**
 - **Repository**: Persistence (Postgres); implements interfaces for mockable unit tests
-- **Validation**: Input validation rules; used by use cases
+- **Validation**: Input validation helpers; used by **handlers** (not use cases)
 - **Domain**: Entities and domain errors; no outer dependencies
 
 ---

@@ -9,14 +9,16 @@ Clean, layered architecture for microservices to support testability, maintainab
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Handlers (HTTP)                                        │
-│  - Parse request, delegate to use case, map response     │
+│  - Parse request, validate input (required, format)      │
+│  - Delegate to use case, map response                   │
 │  - No business logic, no direct DB access                │
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
 │  Use Cases (Application)                                 │
-│  - Orchestrate validation, domain logic, persistence     │
-│  - Depends on repository interfaces (injectable)         │
+│  - Domain / business logic and persistence only           │
+│  - Depends on repository interfaces (injectable)          │
+│  - No input validation (handler does that)               │
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
@@ -31,7 +33,7 @@ Clean, layered architecture for microservices to support testability, maintainab
 │  - No dependencies on outer layers                      │
 └─────────────────────────────────────────────────────────┘
 
-  Validation: separate package, used by use cases
+  Validation: input checks (required, format) in handlers; shared rules in validation package
 ```
 
 ---
@@ -40,11 +42,13 @@ Clean, layered architecture for microservices to support testability, maintainab
 
 | Layer | Responsibility | Depends on |
 |-------|----------------|------------|
-| **Handlers** | HTTP parsing, status codes, JSON encode/decode | Use cases |
-| **Use Cases** | Business flow, validation, orchestration | Domain, Repository (interface), Validation |
+| **Handlers** | HTTP parsing, **input validation** (required, format), status codes, JSON | Use cases, Validation |
+| **Use Cases** | **Domain / business logic only** (e.g. hash password, check credentials, create user) | Domain, Repository (interface) |
 | **Repository** | Persistence (Postgres, etc.) | Domain |
-| **Validation** | Input validation rules | Domain (errors) |
+| **Validation** | Input validation helpers (required, format); shared rules in `common.go` | Domain (errors) |
 | **Domain** | Entities, domain errors | Nothing |
+
+**Where validation lives:** Input checks (e.g. “email present”, “email format”, “password required”) run in **handlers**; handlers call the `validation` package and return 400 before invoking the use case. Use cases contain **domain rules only** (e.g. duplicate email, invalid credentials, hash and persist). Shared rules (e.g. email format) live in `validation/common.go` and are reused by handlers. See `services/users/internal/validation/doc.go`.
 
 ---
 
@@ -66,7 +70,10 @@ services/users/
 │   │   ├── user.go
 │   │   └── errors.go
 │   ├── validation/       # Input validation (DTO → domain rules)
+│   │   ├── doc.go        # Package policy: reuse shared rules from common.go
+│   │   ├── common.go     # Shared rules (e.g. ValidateEmail) — reuse, do not duplicate
 │   │   ├── register.go
+│   │   ├── login.go
 │   │   └── cpf.go
 │   ├── repository/       # Persistence
 │   │   ├── user_repository.go      # Interface
@@ -83,7 +90,7 @@ services/users/
 
 ## Testing
 
-- **Use cases**: Mock `UserRepository`; test validation, duplicate email, success
+- **Use cases**: Mock `UserRepository`; test domain rules (duplicate email, success); no input validation
 - **Handlers**: Use a fake use case or integration tests with real use case + mock repo
 - **Repositories**: Integration tests with test database
 

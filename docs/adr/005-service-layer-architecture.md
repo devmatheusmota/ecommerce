@@ -12,10 +12,10 @@ Services need a clear structure that supports unit testing, maintainability, and
 
 Adopt a layered architecture for each service:
 
-1. **Handlers (HTTP layer)**: Thin; parse request, call use case, map response. No business logic or direct DB access.
-2. **Use Cases**: Orchestrate validation, domain logic, and persistence. Depend on repository **interfaces** (injectable).
+1. **Handlers (HTTP layer)**: Parse request, validate input (required, format) via validation package, call use case, map response. No business logic or direct DB access.
+2. **Use Cases**: Domain / business logic and persistence only. Depend on repository **interfaces** (injectable). No input validation (handlers do that).
 3. **Repository**: Implements persistence; concrete implementation (e.g. Postgres). Abstracts DB details.
-4. **Validation**: Separate package for input validation; used by use cases.
+4. **Validation**: Separate package for input validation; used by **handlers** (e.g. email format, required fields).
 5. **Domain**: Entities and domain errors. No dependencies on outer layers.
 
 ## Rationale

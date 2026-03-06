@@ -7,6 +7,7 @@ import (
 
 	"github.com/ecommerce/services/users/internal/domain"
 	"github.com/ecommerce/services/users/internal/usecase"
+	"github.com/ecommerce/services/users/internal/validation"
 )
 
 type RegisterRequest struct {
@@ -36,9 +37,18 @@ func Register(uc *usecase.RegisterUser) http.HandlerFunc {
 			return
 		}
 
-		user, err := uc.Execute(usecase.RegisterUserInput{
+		input := &validation.RegisterInput{
 			Email: req.Email, Password: req.Password,
 			Name: req.Name, Phone: req.Phone, CPF: req.CPF,
+		}
+		if err := validation.ValidateRegisterInput(input); err != nil {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+
+		user, err := uc.Execute(usecase.RegisterUserInput{
+			Email: input.Email, Password: input.Password,
+			Name: input.Name, Phone: input.Phone, CPF: input.CPF,
 		})
 		if err != nil {
 			respondRegisterError(w, err)
@@ -52,10 +62,7 @@ func Register(uc *usecase.RegisterUser) http.HandlerFunc {
 }
 
 func respondRegisterError(w http.ResponseWriter, err error) {
-	var valErr domain.ErrValidation
 	switch {
-	case errors.As(err, &valErr):
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	case errors.Is(err, domain.ErrDuplicateEmail):
 		respondJSON(w, http.StatusConflict, map[string]string{"error": "email already registered"})
 	default:

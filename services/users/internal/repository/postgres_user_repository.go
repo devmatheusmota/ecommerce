@@ -42,10 +42,10 @@ func (r *PostgresUserRepository) GetByEmail(email string) (*domain.User, error) 
 		FROM users WHERE email = $1
 	`, email).Scan(&u.ID, &u.Email, &u.Name, &u.Phone, &u.CPF, &u.PasswordHash)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, domain.ErrUserNotFound
+		}
 		return nil, err
 	}
 	return &u, nil

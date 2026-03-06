@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -31,17 +32,29 @@ func NewLoginUser(repo repository.UserRepository) *LoginUser {
 
 func (u *LoginUser) Execute(in LoginUserInput) (*LoginUserOutput, error) {
 	user, err := u.repo.GetByEmail(in.Email)
-	if errors.Is(err, domain.ErrUserNotFound) {
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return nil, domain.ErrInvalidCredentials
+		}
+		return nil, err
+	}
+	if user == nil {
 		return nil, domain.ErrInvalidCredentials
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)); errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)); err != nil {
 		return nil, domain.ErrInvalidCredentials
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return nil, fmt.Errorf("JWT_SECRET is not set")
 	}
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	}).SignedString([]byte(os.Getenv("JWT_SECRET")))
+	}).SignedString([]byte(secret))
 	if err != nil {
 		return nil, err
 	}

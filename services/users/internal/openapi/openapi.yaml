@@ -100,3 +100,69 @@ paths:
                   error:
                     type: string
                     example: email already registered
+  /login:
+    post:
+      summary: Login and get JWT
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  example: secret123
+      responses:
+        "200":
+          description: Login successful; returns access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                  expire_at:
+                    type: string
+                    format: date-time
+                    description: Token expiration time
+        "400":
+          description: Validation error (e.g. invalid email format, password required)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: email is required
+        "401":
+          description: Invalid credentials (wrong email or password)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: invalid credentials
+        "500":
+          description: Server error (e.g. JWT_SECRET not set)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: failed to login user

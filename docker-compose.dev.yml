@@ -9,6 +9,9 @@ services:
     build:
       context: .
       dockerfile: docker/services/users/Dockerfile.dev
+    environment:
+      # Version shown in API responses in dev (e.g. dev-1.0.0). Update to match your latest tag.
+      VERSION: "dev-1.0.0"
     volumes:
       - ./services/users:/app
     healthcheck:

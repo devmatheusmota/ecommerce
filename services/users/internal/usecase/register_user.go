@@ -3,7 +3,6 @@ package usecase
 import (
 	"github.com/ecommerce/services/users/internal/domain"
 	"github.com/ecommerce/services/users/internal/repository"
-	"github.com/ecommerce/services/users/internal/validation"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,24 +23,16 @@ func NewRegisterUser(repo repository.UserRepository) *RegisterUser {
 }
 
 func (u *RegisterUser) Execute(in RegisterUserInput) (*domain.User, error) {
-	input := &validation.RegisterInput{
-		Email: in.Email, Password: in.Password,
-		Name: in.Name, Phone: in.Phone, CPF: in.CPF,
-	}
-	if err := validation.ValidateRegisterInput(input); err != nil {
-		return nil, err
-	}
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
 	user := &domain.User{
-		Email:        input.Email,
-		Name:         input.Name,
-		Phone:        input.Phone,
-		CPF:          input.CPF,
+		Email:        in.Email,
+		Name:         in.Name,
+		Phone:        in.Phone,
+		CPF:          in.CPF,
 		PasswordHash: string(hash),
 	}
 
