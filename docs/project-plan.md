@@ -25,9 +25,9 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 ## 2. Feature Breakdown by Domain
 
 ### 2.1 Users
-- [ ] User registration (email, password)
+- [x] User registration (email, password, name, phone, CPF with validation)
 - [ ] Login / JWT tokens
-- [ ] Profile (name, phone, CPF)
+- [ ] Profile (GET /me, update name/phone/CPF)
 - [ ] Addresses (CRUD, default)
 - [ ] Password reset
 - [ ] (Later) OAuth (Google, etc.)
@@ -187,8 +187,8 @@ Use this as a backlog. Check off as you go.
 - [ ] OpenTelemetry in at least one service
 
 ### Users
-- [ ] users service skeleton (Go, chi/gin, Postgres)
-- [ ] POST /register
+- [x] users service skeleton (Go, chi, Postgres)
+- [x] POST /register (email, password, name, phone, CPF; validation + duplicate email 409)
 - [ ] POST /login (returns JWT)
 - [ ] GET /me (profile, requires JWT)
 - [ ] CRUD addresses

@@ -66,7 +66,8 @@ services/users/
 │   │   ├── user.go
 │   │   └── errors.go
 │   ├── validation/       # Input validation (DTO → domain rules)
-│   │   └── register.go
+│   │   ├── register.go
+│   │   └── cpf.go
 │   ├── repository/       # Persistence
 │   │   ├── user_repository.go      # Interface
 │   │   └── postgres_user_repository.go

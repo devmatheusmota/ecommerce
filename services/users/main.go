@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/ecommerce/services/users/internal/database"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/ecommerce/services/users/internal/router"
 )
 
 func main() {
@@ -18,7 +16,11 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := database.Migrate(db); err != nil {
+	migrateDB, err := database.Open()
+	if err != nil {
+		log.Fatal("database:", err)
+	}
+	if err := database.Migrate(migrateDB); err != nil {
 		log.Fatal("migrate:", err)
 	}
 
@@ -27,20 +29,6 @@ func main() {
 		port = "8080"
 	}
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-
-	r.Get("/health", healthHandler)
-
 	log.Printf("users service listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
-}
-
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "ok",
-		"service": "users",
-	})
+	log.Fatal(http.ListenAndServe(":"+port, router.New(db)))
 }
