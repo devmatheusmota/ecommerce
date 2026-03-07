@@ -1,6 +1,6 @@
 # Kong API Gateway
 
-Declarative config in `kong.yml`. The `kong-seed` service loads it into the Kong DB at startup.
+Declarative config: **kong.yml.template** is the source for seed. At startup `kong-seed` substitutes `__JWT_SECRET__` with `JWT_SECRET` from `services/users/.env` (default `dev`), then runs `kong config db_import`. Static **kong.yml** is a fallback for manual import.
 
 ## Dev vs prod: who is the source of truth?
 
@@ -14,9 +14,9 @@ Declarative config in `kong.yml`. The `kong-seed` service loads it into the Kong
 
 - **GET /v1/users/me** is protected: Kong validates the Bearer JWT and forwards the user ID to the upstream in the `X-User-ID` header.
 - The users service issues JWTs with claim **`iss`: `"users"`** so Kong can match the consumer.
-- **Secret**: The consumer `users` in `kong.yml` has a JWT secret (default `"dev"`). It **must match** the `JWT_SECRET` used by the users service (`services/users/.env`). If they differ, token verification will fail.
+- **Secret**: Kong reads the same `JWT_SECRET` as the users service from `services/users/.env` (seed uses `kong.yml.template` and substitutes it). It **must match** or token verification will fail.
 
-**Local dev:** Use the same value in both places, e.g. `JWT_SECRET=dev` in `services/users/.env` and `secret: "dev"` in `kong.yml`.
+**Local dev:** Set `JWT_SECRET=dev` in `services/users/.env` (see `.env.example`). Kong seed uses that value automatically.
 
 **Production:** Do not commit the real secret in `kong.yml`. Use Kong Admin API to create/update the consumer’s JWT credential, or generate the config from a secret store.
 

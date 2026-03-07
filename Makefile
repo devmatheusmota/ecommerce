@@ -1,4 +1,4 @@
-.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down kong-test test-users cover-users cover-users-html
+.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down kong-test kong-jwt-test test-users cover-users cover-users-html
 
 # Version for dev: from latest git tag (e.g. 1.0.1 or 1.0.1-2-gabc123). Exported so docker-compose.dev.yml can use ${VERSION}.
 VERSION := $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo "dev")
@@ -46,6 +46,21 @@ migrate-users-down:
 kong-test:
 	@code=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health 2>/dev/null); \
 	if [ "$$code" = "200" ]; then echo "Kong OK — HTTP $$code"; else echo "Kong FAIL — gateway unreachable (run 'make up'?)"; fi
+
+# Full JWT flow via Kong: register → login → GET /me. Requires curl and jq. Run after 'make up'.
+kong-jwt-test:
+	@base="http://localhost:8000/v1/users"; \
+	email="kong-jwt-test-$$(date +%s)@example.com"; \
+	echo "Registering $$email..."; \
+	reg=$$(curl -s -X POST "$$base/register" -H "Content-Type: application/json" \
+	  -d '{"email":"'$$email'","password":"testpass123","name":"JWT Test","phone":"+5511999999999","cpf":"529.982.247-25"}'); \
+	if echo "$$reg" | grep -q '"error"'; then echo "Register FAIL: $$reg"; exit 1; fi; \
+	echo "Logging in..."; \
+	login=$$(curl -s -X POST "$$base/login" -H "Content-Type: application/json" -d '{"email":"'$$email'","password":"testpass123"}'); \
+	token=$$(echo "$$login" | jq -r '.data.token'); \
+	if [ -z "$$token" ] || [ "$$token" = "null" ]; then echo "Login FAIL: $$login"; exit 1; fi; \
+	code=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$token" "$$base/me"); \
+	if [ "$$code" = "200" ]; then echo "Kong JWT OK — register, login, GET /me = $$code"; else echo "Kong JWT FAIL — GET /me = $$code (expected 200)"; exit 1; fi
 
 # --- Tests & coverage (users service) ---
 # Run tests only.

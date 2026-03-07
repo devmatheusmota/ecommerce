@@ -113,6 +113,11 @@ ecommerce/
 - **Service-to-service**: gRPC with protobuf; proto files in `shared/proto/` or per-service
 - **Config**: Environment variables; no secrets in code
 
+### Implementation checklist (mandatory)
+
+- **Tests**: When you finish an implementation (feature, use case, handler, validation, repository), you **must** add or extend tests for it. No feature is considered done without tests.
+- **OpenAPI**: Every **new HTTP route** (or change in request/response of an existing route) must be documented in the service’s OpenAPI spec (e.g. `services/users/internal/openapi/openapi.yaml`). Keep the spec in sync with the API.
+
 ---
 
 ## Learned User Preferences

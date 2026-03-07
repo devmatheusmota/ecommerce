@@ -74,3 +74,18 @@ func (r *PostgresUserRepository) GetByID(id string) (*domain.User, error) {
 	}
 	return &u, nil
 }
+
+func (r *PostgresUserRepository) Update(user *domain.User) (*domain.User, error) {
+	result, err := r.db.Exec(`
+		UPDATE users SET name = $1, phone = $2, cpf = $3, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $4
+	`, user.Name, user.Phone, user.CPF, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return nil, domain.ErrUserNotFound
+	}
+	return user, nil
+}

@@ -83,6 +83,8 @@ services:
   kong-seed:
     image: kong/kong-gateway:3.7
     container_name: ecommerce-kong-seed
+    env_file:
+      - services/users/.env
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-database
@@ -90,7 +92,12 @@ services:
       KONG_PG_DATABASE: kong
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: kong_dev
-    command: kong config db_import /kong/declarative/kong.yml
+      # JWT_SECRET from env_file (services/users/.env); must match users service. Default in script: dev.
+      JWT_SECRET: ${JWT_SECRET:-dev}
+    command: >
+      sh -c 's="$${JWT_SECRET:-dev}";
+      sed "s/__JWT_SECRET__/$$s/g" /kong/declarative/kong.yml.template > /tmp/kong.yml
+      && kong config db_import /tmp/kong.yml'
     volumes:
       - ./infra/kong:/kong/declarative:ro
     depends_on:

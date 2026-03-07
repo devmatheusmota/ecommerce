@@ -231,6 +231,91 @@ paths:
                   error:
                     type: string
                     example: failed to get user
+    patch:
+      summary: Update current user profile
+      description: |
+        Updates name, phone, and/or CPF for the authenticated user. Requires a valid JWT.
+        Send only the fields you want to change; at least one field is required.
+      operationId: updateMe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                phone:
+                  type: string
+                  example: "11999999999"
+                cpf:
+                  type: string
+                  description: Brazilian CPF (11 digits); formatting optional
+                  example: "52998224725"
+      responses:
+        "200":
+          description: Profile updated; returns current profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  email:
+                    type: string
+                    format: email
+                  name:
+                    type: string
+                  phone:
+                    type: string
+                  cpf:
+                    type: string
+        "400":
+          description: Validation error (e.g. no fields sent, invalid CPF)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: at least one field (name, phone, cpf) is required
+        "401":
+          description: Missing or invalid identity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: user not found
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: failed to get user
 
 components:
   securitySchemes:

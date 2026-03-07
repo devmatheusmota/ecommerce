@@ -1,17 +1,8 @@
-# Kong Gateway — declarative config (static fallback)
-# kong-seed uses kong.yml.template + JWT_SECRET from services/users/.env (see docker-compose).
-# This file is the fallback when importing manually (e.g. kong config db_import kong.yml); for seed, the template is used.
-# JWT: Consumer "users" secret must match users service JWT_SECRET (e.g. dev for local).
+# Kong Gateway — declarative config (template)
+# kong-seed substitutes __JWT_SECRET__ with JWT_SECRET env (default: dev).
+# Source: kong.yml.template → generated for db_import so Kong and users service share the same secret.
 #
-# Path routing (no request-transformer needed for normal routes):
-# The catch-all route /v1/users uses strip_path: true, so Kong strips the prefix and forwards the suffix:
-#   GET /v1/users/login    → upstream /login
-#   POST /v1/users/register → upstream /register
-#   GET /v1/users/health   → upstream /health
-# This is the standard Kong pattern ("rename endpoint via Route + strip_path").
-#
-# Exception: /v1/users/me has its own route for JWT protection. Because the full path is stripped
-# (exact match → nothing left), a request-transformer sets the upstream URI to /me.
+# Path routing: strip_path on /v1/users forwards suffix to upstream; request-transformer sets URI for /me, /login, /register.
 
 _format_version: "3.0"
 
@@ -20,7 +11,7 @@ consumers:
     jwt_secrets:
       - key: users
         algorithm: HS256
-        secret: "dev"
+        secret: "__JWT_SECRET__"
 
 services:
   - name: health
@@ -34,8 +25,6 @@ services:
   - name: users
     url: http://users:8080
     routes:
-      # Specific routes come before the catch-all so they match first.
-      # strip_path: true removes the full path → upstream path is empty; request-transformer sets the correct URI.
       - name: users-me-route
         paths:
           - /v1/users/me
@@ -43,8 +32,6 @@ services:
         methods:
           - GET
           - PATCH
-      # users-login-route and users-register-route are explicit so plugins (e.g. rate limit) can be
-      # attached to each individually via the Kong UI without affecting other paths.
       - name: users-login-route
         paths:
           - /v1/users/login
@@ -57,8 +44,6 @@ services:
         strip_path: true
         methods:
           - POST
-      # Catch-all: strip_path removes /v1/users prefix, forwarding the suffix to the upstream.
-      # GET /v1/users/health → /health, GET /v1/users/docs → /docs, etc.
       - name: users-route
         paths:
           - /v1/users

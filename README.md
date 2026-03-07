@@ -92,6 +92,7 @@ ecommerce/
 | `make dev` | Like `up` but with hot reload for users |
 | `make kong-reset` | Wipe Kong DB and re-import config (dev only) |
 | `make kong-test` | Check Kong proxy (HTTP 200 on /health) |
+| `make kong-jwt-test` | Full JWT flow via Kong: register → login → GET /me (requires jq) |
 | `make k8s-apply` | Apply K8s manifests |
 | `make build` | Build users service image |
 

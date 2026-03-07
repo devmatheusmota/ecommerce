@@ -231,6 +231,73 @@ func TestRouter_Me(t *testing.T) {
 	})
 }
 
+func TestRouter_UpdateMe(t *testing.T) {
+	validCPF := "529.982.247-25"
+	repo := repository.NewMockUserRepository()
+	repo.SetUser(&domain.User{
+		ID: "update-me-id", Email: "update@example.com", Name: "Before", Phone: "11000000000",
+		CPF: validCPF, PasswordHash: "hash",
+	})
+	h := NewWithRepository(repo)
+
+	t.Run("missing X-User-ID", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/me", jsonBody(map[string]string{"name": "After"}))
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if got, want := rec.Code, http.StatusUnauthorized; got != want {
+			t.Errorf("status: got %d, want %d", got, want)
+		}
+	})
+
+	t.Run("validation error no fields", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/me", jsonBody(map[string]string{}))
+		req.Header.Set("X-User-ID", "update-me-id")
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if got, want := rec.Code, http.StatusBadRequest; got != want {
+			t.Errorf("status: got %d, want %d", got, want)
+		}
+	})
+
+	t.Run("success update name", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/me", jsonBody(map[string]string{"name": "After Name"}))
+		req.Header.Set("X-User-ID", "update-me-id")
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if got, want := rec.Code, http.StatusOK; got != want {
+			t.Errorf("status: got %d, want %d", got, want)
+		}
+		var res struct {
+			Data struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Name  string `json:"name"`
+				Phone string `json:"phone"`
+				CPF   string `json:"cpf"`
+			} `json:"data"`
+		}
+		if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		if got, want := res.Data.Name, "After Name"; got != want {
+			t.Errorf("data.name: got %q, want %q", got, want)
+		}
+		if got, want := res.Data.Email, "update@example.com"; got != want {
+			t.Errorf("data.email: got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/me", jsonBody(map[string]string{"name": "Any"}))
+		req.Header.Set("X-User-ID", "nonexistent-id")
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if got, want := rec.Code, http.StatusNotFound; got != want {
+			t.Errorf("status: got %d, want %d", got, want)
+		}
+	})
+}
+
 func jsonBody(v any) *bytes.Reader {
 	b, _ := json.Marshal(v)
 	return bytes.NewReader(b)

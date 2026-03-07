@@ -27,6 +27,7 @@ func NewWithRepository(userRepository repository.UserRepository) http.Handler {
 	registerUsecase := usecase.NewRegisterUser(userRepository)
 	loginUsecase := usecase.NewLoginUser(userRepository)
 	meUsecase := usecase.NewMeUser(userRepository)
+	updateProfileUsecase := usecase.NewUpdateProfile(userRepository)
 
 	r.Get("/health", handlers.Health)
 	r.Get("/docs", openapi.Handler())
@@ -37,6 +38,7 @@ func NewWithRepository(userRepository repository.UserRepository) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(authmiddleware.RequireUserID)
 		r.Get("/me", handlers.Me(meUsecase))
+		r.Patch("/me", handlers.UpdateMe(updateProfileUsecase))
 	})
 
 	return r

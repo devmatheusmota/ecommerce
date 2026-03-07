@@ -65,6 +65,21 @@ func (m *MockUserRepository) GetByID(id string) (*domain.User, error) {
 	return &clone, nil
 }
 
+// Update updates name, phone, and CPF for the user by ID. Returns domain.ErrUserNotFound if not found.
+func (m *MockUserRepository) Update(user *domain.User) (*domain.User, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	u, ok := m.byID[user.ID]
+	if !ok {
+		return nil, domain.ErrUserNotFound
+	}
+	u.Name = user.Name
+	u.Phone = user.Phone
+	u.CPF = user.CPF
+	clone := *u
+	return &clone, nil
+}
+
 // SetUser injects a user for testing (e.g. to simulate existing user for GetByID/GetByEmail).
 func (m *MockUserRepository) SetUser(user *domain.User) {
 	m.mu.Lock()

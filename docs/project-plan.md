@@ -28,7 +28,7 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 - [x] User registration (email, password, name, phone, CPF with validation)
 - [ ] Phone number confirmation at registration (user re-enters phone or SMS/OTP verification)
 - [x] Login / JWT tokens
-- [ ] Profile (GET /me, update name/phone/CPF)
+- [x] Profile (GET /me, update name/phone/CPF)
 - [ ] Addresses (CRUD): billing and shipping separation; default per type (default billing, default shipping)
 - [ ] Password reset
 - [ ] (Later) OAuth (Google, etc.)
@@ -182,6 +182,7 @@ Use this as a backlog. Check off as you go.
 
 ### Infra
 - [x] Add Kong to Docker Compose
+- [x] Kong JWT plugin on GET /v1/users/me (validates Bearer, sets X-User-ID from claim `sub`; secret from env via kong.yml.template)
 - [ ] Add Kong to K8s
 - [ ] Define Kong routes (placeholder for each service)
 - [ ] Prometheus + Grafana
@@ -193,6 +194,7 @@ Use this as a backlog. Check off as you go.
 - [ ] Phone number confirmation at registration (re-type phone field or SMS/OTP flow)
 - [x] POST /login (returns JWT)
 - [x] GET /me (profile, requires JWT)
+- [x] PATCH /me (update name, phone, CPF; at least one field required)
 - [ ] CRUD addresses (billing vs shipping; default billing, default shipping)
 - [ ] K8s Deployment + Service
 
