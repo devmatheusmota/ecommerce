@@ -26,9 +26,10 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 
 ### 2.1 Users
 - [x] User registration (email, password, name, phone, CPF with validation)
+- [ ] Phone number confirmation at registration (user re-enters phone or SMS/OTP verification)
 - [x] Login / JWT tokens
 - [ ] Profile (GET /me, update name/phone/CPF)
-- [ ] Addresses (CRUD, default)
+- [ ] Addresses (CRUD): billing and shipping separation; default per type (default billing, default shipping)
 - [ ] Password reset
 - [ ] (Later) OAuth (Google, etc.)
 
@@ -189,9 +190,10 @@ Use this as a backlog. Check off as you go.
 ### Users
 - [x] users service skeleton (Go, chi, Postgres)
 - [x] POST /register (email, password, name, phone, CPF; validation + duplicate email 409)
+- [ ] Phone number confirmation at registration (re-type phone field or SMS/OTP flow)
 - [x] POST /login (returns JWT)
-- [ ] GET /me (profile, requires JWT)
-- [ ] CRUD addresses
+- [x] GET /me (profile, requires JWT)
+- [ ] CRUD addresses (billing vs shipping; default billing, default shipping)
 - [ ] K8s Deployment + Service
 
 ### Catalog
@@ -292,7 +294,7 @@ shipping → RabbitMQ (shipment.shipped, shipment.delivered)
 
 | Service | Main entities |
 |---------|---------------|
-| users | users, addresses |
+| users | users, addresses (billing/shipping type, default per type) |
 | catalog | categories, products, product_variants |
 | sellers | sellers |
 | inventory | stock (product_id, seller_id, quantity, reserved) |

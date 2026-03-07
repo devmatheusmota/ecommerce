@@ -47,7 +47,7 @@ func validCPF(cpf string) bool {
 		sum += int(digits[i]-'0') * (11 - i)
 	}
 	d11 := (sum * 10) % 11
-	if d11 == 10 {
+	if d11 == 10 { // when remainder is 10, check digit is 0 (no valid CPF has 11th digit 0 with sum2≡1 mod 11, but the rule is correct)
 		d11 = 0
 	}
 	return int(digits[10]-'0') == d11

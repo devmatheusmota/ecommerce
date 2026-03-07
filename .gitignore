@@ -9,6 +9,7 @@ services/users/build-errors.log
 /vendor/
 *.test
 *.out
+coverage.html
 go.work
 go.work.sum
 

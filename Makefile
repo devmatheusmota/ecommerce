@@ -1,4 +1,4 @@
-.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down kong-test
+.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down kong-test test-users cover-users cover-users-html
 
 # Version for dev: from latest git tag (e.g. 1.0.1 or 1.0.1-2-gabc123). Exported so docker-compose.dev.yml can use ${VERSION}.
 VERSION := $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo "dev")
@@ -46,6 +46,21 @@ migrate-users-down:
 kong-test:
 	@code=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health 2>/dev/null); \
 	if [ "$$code" = "200" ]; then echo "Kong OK — HTTP $$code"; else echo "Kong FAIL — gateway unreachable (run 'make up'?)"; fi
+
+# --- Tests & coverage (users service) ---
+# Run tests only.
+test-users:
+	cd services/users && go test ./... -count=1
+
+# Run tests and print coverage per function. Writes coverage to services/users/coverage.out.
+# Requires a single Go version (go and go tool must match); if you see "version does not match", fix PATH or go.mod.
+cover-users:
+	cd services/users && go test ./... -coverprofile=coverage.out -count=1 && go tool cover -func=coverage.out
+
+# Run tests and open HTML coverage report in the browser (coverage.out must exist; run make cover-users first, or this runs tests).
+cover-users-html: cover-users
+	cd services/users && go tool cover -html=coverage.out -o coverage.html
+	@echo "Open services/users/coverage.html in your browser."
 
 # --- Build (official/release: version from git) ---
 # Builds the users service image with VERSION from git (same as dev). Image tagged as ecommerce-users:$(VERSION).

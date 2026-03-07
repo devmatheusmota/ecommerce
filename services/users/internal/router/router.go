@@ -14,11 +14,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// New returns a router with Postgres-backed user repository. Use for production.
 func New(db *sql.DB) http.Handler {
+	return NewWithRepository(repository.NewPostgresUserRepository(db))
+}
+
+// NewWithRepository returns a router with the given user repository. Use for tests with a mock repository.
+func NewWithRepository(userRepository repository.UserRepository) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	userRepository := repository.NewPostgresUserRepository(db)
 	registerUsecase := usecase.NewRegisterUser(userRepository)
 	loginUsecase := usecase.NewLoginUser(userRepository)
 	meUsecase := usecase.NewMeUser(userRepository)
