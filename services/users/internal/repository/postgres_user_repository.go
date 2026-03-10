@@ -89,3 +89,15 @@ func (r *PostgresUserRepository) Update(user *domain.User) (*domain.User, error)
 	}
 	return user, nil
 }
+
+func (r *PostgresUserRepository) UpdatePassword(userID, passwordHash string) error {
+	result, err := r.db.Exec(`UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`, passwordHash, userID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return domain.ErrUserNotFound
+	}
+	return nil
+}

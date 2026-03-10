@@ -9,6 +9,8 @@ var (
 	ErrDuplicateEmail     = errors.New("email already registered")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrAddressNotFound    = errors.New("address not found")
+	ErrInvalidResetToken  = errors.New("invalid or expired password reset token")
 )
 
 // ErrValidation is for invalid input (format, required fields). Used by the validation layer.

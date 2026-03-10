@@ -80,6 +80,18 @@ func (m *MockUserRepository) Update(user *domain.User) (*domain.User, error) {
 	return &clone, nil
 }
 
+// UpdatePassword updates the user's password hash by ID.
+func (m *MockUserRepository) UpdatePassword(userID, passwordHash string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	u, ok := m.byID[userID]
+	if !ok {
+		return domain.ErrUserNotFound
+	}
+	u.PasswordHash = passwordHash
+	return nil
+}
+
 // SetUser injects a user for testing (e.g. to simulate existing user for GetByID/GetByEmail).
 func (m *MockUserRepository) SetUser(user *domain.User) {
 	m.mu.Lock()

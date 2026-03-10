@@ -164,6 +164,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     expose:
       - "8080"  # internal only; Kong proxies /v1/users -> http://users:8080
     healthcheck:

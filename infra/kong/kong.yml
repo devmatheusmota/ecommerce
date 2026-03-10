@@ -34,8 +34,16 @@ services:
   - name: users
     url: http://users:8080
     routes:
-      # Specific routes come before the catch-all so they match first.
-      # strip_path: true removes the full path → upstream path is empty; request-transformer sets the correct URI.
+      # More specific paths MUST come before /v1/users/me (prefix match would catch /me/addresses).
+      - name: users-me-addresses-route
+        paths:
+          - /v1/users/me/addresses
+        strip_path: true
+        methods:
+          - GET
+          - POST
+          - PATCH
+          - DELETE
       - name: users-me-route
         paths:
           - /v1/users/me
@@ -85,13 +93,44 @@ plugins:
     config:
       replace:
         uri: "/register"
-
   - name: jwt
     route: users-me-route
     config:
       key_claim_name: iss
       claims_to_verify:
         - exp
+
+  - name: jwt
+    route: users-me-addresses-route
+    config:
+      key_claim_name: iss
+      claims_to_verify:
+        - exp
+  - name: pre-function
+    route: users-me-addresses-route
+    config:
+      access:
+        - |
+          local prefix = "/v1/users/me/addresses"
+          local client = kong.request.get_path() or ""
+          local suffix = (#client > #prefix) and string.sub(client, #prefix + 1) or ""
+          kong.service.request.set_path("/me/addresses" .. suffix)
+          local auth = kong.request.get_header("authorization")
+          if auth and auth ~= "" then
+            local token = auth:gsub("^[Bb]earer%s+", "")
+            local parts = {}
+            for p in (token .. "."):gmatch("(.-)%.") do parts[#parts + 1] = p end
+            if #parts >= 2 then
+              local payload = parts[2]:gsub("-", "+"):gsub("_", "/")
+              local pad = (#payload % 4)
+              if pad > 0 then payload = payload .. string.rep("=", 4 - pad) end
+              local decoded = ngx.decode_base64(payload)
+              if decoded then
+                local sub = decoded:match('"sub"%s*:%s*"([^"]+)"')
+                if sub then kong.service.request.set_header("X-User-ID", sub) end
+              end
+            end
+          end
 
   - name: pre-function
     route: users-me-route

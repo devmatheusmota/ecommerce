@@ -18,7 +18,7 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 | **shipping** | Shipping options, tracking, delivery | Get shipping rates | `shipment.created`, `shipment.delivered` |
 | **sellers** | Seller registry, storefront | Seller info | `seller.registered` |
 | **reviews** | Product/seller ratings | - | `review.created` |
-| **notifications** | Email, push, in-app | - | (consumer only) |
+| **notifications** | Email, SMS, push, in-app | - | (consumer only) |
 
 ---
 
@@ -26,11 +26,10 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 
 ### 2.1 Users
 - [x] User registration (email, password, name, phone, CPF with validation)
-- [ ] Phone number confirmation at registration (user re-enters phone or SMS/OTP verification)
 - [x] Login / JWT tokens
 - [x] Profile (GET /me, update name/phone/CPF)
-- [ ] Addresses (CRUD): billing and shipping separation; default per type (default billing, default shipping)
-- [ ] Password reset
+- [x] Addresses (CRUD): billing and shipping separation; default per type (default billing, default shipping)
+- [x] Password reset (request token by email; confirm with token + new password)
 - [ ] (Later) OAuth (Google, etc.)
 
 ### 2.2 Catalog
@@ -85,7 +84,9 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 - [ ] List reviews for product/seller
 - [ ] Only buyers who purchased can review
 
-### 2.9 Notifications
+### 2.9 Notifications *(last feature to implement)*
+- [ ] Notifications service skeleton (Go, RabbitMQ consumer)
+- [ ] Consume SMS/email requests from RabbitMQ queue `notifications`; send via provider or log (dev)
 - [ ] Order confirmed (email)
 - [ ] Payment received
 - [ ] Shipment shipped
@@ -163,16 +164,18 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 12. **shipping** service — mock rates, create shipment on `order.paid`
 
 ### Phase 3 — Completion & Polish
-13. **notifications** service — consume events, send emails (mock)
-14. **reviews** service — rate products/sellers
-15. Search improvements (DB full-text or dedicated search service)
-16. Admin/seller dashboard (simplified)
+13. **reviews** service — rate products/sellers
+14. Search improvements (DB full-text or dedicated search service)
+15. Admin/seller dashboard (simplified)
 
 ### Phase 4 — Scale & Ops
-17. Observability (Prometheus, Grafana, OpenTelemetry)
-18. Kong in K8s, K8s manifests for all services
-19. CI/CD pipeline
-20. Load testing, chaos engineering (optional)
+16. Observability (Prometheus, Grafana, OpenTelemetry)
+17. Kong in K8s, K8s manifests for all services
+18. CI/CD pipeline
+19. Load testing, chaos engineering (optional)
+
+### Phase 5 — Notifications (last)
+20. **notifications** service — consume events from RabbitMQ, send SMS/email (mock)
 
 ---
 
@@ -188,14 +191,14 @@ Use this as a backlog. Check off as you go.
 - [ ] Prometheus + Grafana
 - [ ] OpenTelemetry in at least one service
 
-### Users
+### Users *(addresses + password reset completed with tests)*
 - [x] users service skeleton (Go, chi, Postgres)
 - [x] POST /register (email, password, name, phone, CPF; validation + duplicate email 409)
-- [ ] Phone number confirmation at registration (re-type phone field or SMS/OTP flow)
 - [x] POST /login (returns JWT)
 - [x] GET /me (profile, requires JWT)
 - [x] PATCH /me (update name, phone, CPF; at least one field required)
-- [ ] CRUD addresses (billing vs shipping; default billing, default shipping)
+- [x] CRUD addresses (POST/GET/PATCH/DELETE /me/addresses; type billing/shipping; default flags)
+- [x] POST /password-reset/request, POST /password-reset/confirm
 - [ ] K8s Deployment + Service
 
 ### Catalog
@@ -249,10 +252,10 @@ Use this as a backlog. Check off as you go.
 - [ ] GET /shipments/:id/tracking
 - [ ] K8s Deployment + Service
 
-### Notifications
-- [ ] notifications service skeleton
-- [ ] Consume order.created, payment.completed, shipment.shipped, etc.
-- [ ] Send email (mock: log to stdout or use Mailhog)
+### Notifications *(implement last)*
+- [ ] notifications service skeleton (Go, RabbitMQ consumer)
+- [ ] Consume queue `notifications`; on `type:sms` send SMS
+- [ ] Consume order.created, payment.completed, shipment.shipped, etc. (email)
 - [ ] K8s Deployment + Service
 
 ### Reviews

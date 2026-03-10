@@ -26,9 +26,11 @@ func ValidateRegisterInput(in *RegisterInput) error {
 	if strings.TrimSpace(in.Name) == "" {
 		return domain.ErrValidation("name is required")
 	}
-	if strings.TrimSpace(in.Phone) == "" {
+	phone := strings.TrimSpace(in.Phone)
+	if phone == "" {
 		return domain.ErrValidation("phone is required")
 	}
+	in.Phone = phone
 	if strings.TrimSpace(in.CPF) == "" {
 		return domain.ErrValidation("cpf is required")
 	}

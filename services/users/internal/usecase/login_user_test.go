@@ -28,6 +28,9 @@ func (f *failingGetByEmailRepo) GetByID(string) (*domain.User, error) {
 func (f *failingGetByEmailRepo) Update(*domain.User) (*domain.User, error) {
 	return nil, errors.New("not implemented")
 }
+func (f *failingGetByEmailRepo) UpdatePassword(string, string) error {
+	return errors.New("not implemented")
+}
 
 func TestLoginUser_Execute(t *testing.T) {
 	const testJWTSecret = "test-secret-for-login"
