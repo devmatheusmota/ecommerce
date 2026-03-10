@@ -26,6 +26,9 @@ go.work.sum
 .env.local
 .env.*.local
 
+# Scripts (local/dev)
+scripts/
+
 # OS
 .DS_Store
 Thumbs.db
