@@ -11,6 +11,10 @@ up:
 down:
 	docker compose down
 
+# Run web frontend (Next.js). Requires backend: make up
+dev-web:
+	cd web && npm run dev
+
 # Dev mode: users service with hot reload (Air) — code changes reflect without rebuild
 dev:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build

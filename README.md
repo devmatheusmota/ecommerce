@@ -15,7 +15,7 @@ A study project that mimics a Mercado Livre-style e-commerce to practice:
 - API Gateway (Kong): routing, JWT, rate limiting, path handling
 - Full cycle: local dev → Docker Compose → Kubernetes
 
-Currently implemented: **Users service** (register, login with JWT, GET /me) behind Kong with per-route plugins.
+Currently implemented: **Users service** (register, login with JWT, profile, addresses) and **Catalog service** (categories, products) behind Kong. **Web frontend** (Next.js) consumes the APIs.
 
 ---
 
@@ -45,6 +45,14 @@ make up
 
 **Smoke test:** `make kong-test`
 
+### Web frontend (Next.js)
+
+```bash
+make dev-web
+```
+
+Requires backend running (`make up`). Open [http://localhost:3000](http://localhost:3000).
+
 ### Dev mode (hot reload)
 
 ```bash
@@ -68,7 +76,9 @@ Requires a running cluster (e.g. `minikube start`).
 
 ```
 ecommerce/
-├── services/users/     # Auth: register, login (JWT), GET /me
+├── services/users/     # Auth: register, login (JWT), profile, addresses
+├── services/catalog/   # Categories, products
+├── web/                # Next.js frontend
 ├── infra/              # Kong config, K8s, Postgres init
 │   └── kong/           # Routes, JWT, request-transformer (see README there)
 ├── docker/             # Dockerfiles
@@ -90,6 +100,7 @@ ecommerce/
 | `make up` | Start Postgres, RabbitMQ, Kong, users |
 | `make down` | Stop all |
 | `make dev` | Like `up` but with hot reload for users |
+| `make dev-web` | Run Next.js frontend (requires `make up`) |
 | `make kong-reset` | Wipe Kong DB and re-import config (dev only) |
 | `make kong-test` | Check Kong proxy (HTTP 200 on /health) |
 | `make kong-jwt-test` | Full JWT flow via Kong: register → login → GET /me (requires jq) |
