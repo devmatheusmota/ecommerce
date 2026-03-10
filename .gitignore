@@ -1,4 +1,5 @@
 # Go
+services/catalog/seed-product-images
 services/users/tmp/
 services/users/build-errors.log
 *.exe

@@ -250,6 +250,32 @@ paths:
                       $ref: "#/components/schemas/Product"
                   total:
                     type: integer
+  /v1/products/{id}/related:
+    get:
+      tags: [Products]
+      summary: List related products (same category or parent category)
+      operationId: listRelatedProducts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Related products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
   /v1/products/{id}:
     get:
       tags: [Products]

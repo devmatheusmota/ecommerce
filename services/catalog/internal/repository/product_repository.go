@@ -3,10 +3,12 @@ package repository
 import "github.com/ecommerce/services/catalog/internal/domain"
 
 type ListProductsFilter struct {
-	SellerID   string
-	CategoryID string
-	Limit      int
-	Offset     int
+	SellerID        string
+	CategoryID      string
+	CategoryIDs     []string // exact match: category_id IN (...); used for related products
+	ExcludeProductID string
+	Limit           int
+	Offset          int
 }
 
 type ProductRepository interface {

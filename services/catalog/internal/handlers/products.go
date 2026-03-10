@@ -127,6 +127,26 @@ func GetProduct(getProductUseCase *usecase.GetProduct) http.HandlerFunc {
 	}
 }
 
+func GetRelatedProducts(listRelatedProductsUseCase *usecase.ListRelatedProducts) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			respondJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
+		productID := chi.URLParam(r, "id")
+		products, err := listRelatedProductsUseCase.Execute(productID)
+		if err != nil {
+			respondProductError(w, err)
+			return
+		}
+		responses := make([]ProductResponse, len(products))
+		for i, product := range products {
+			responses[i] = productToResponse(product)
+		}
+		respondJSON(w, http.StatusOK, map[string]any{"products": responses})
+	}
+}
+
 type UpdateProductRequest struct {
 	SellerID    string   `json:"seller_id"`
 	CategoryID  string   `json:"category_id"`

@@ -94,6 +94,9 @@ export const catalogApi = {
   product: (id: string) =>
     request<Product>(`/api/catalog/v1/products/${id}`),
 
+  relatedProducts: (productId: string) =>
+    request<{ products: Array<Product> }>(`/api/catalog/v1/products/${productId}/related`),
+
   createProduct: (body: {
     seller_id: string;
     category_id: string;

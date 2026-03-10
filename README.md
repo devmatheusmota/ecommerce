@@ -86,6 +86,17 @@ ecommerce/
 └── scripts/            # Utilities
 ```
 
+### Repopulate catalog (if you wiped the DB)
+
+If you reset or recreated the catalog database and want categories + ~125 sample products again:
+
+```bash
+make up   # ensure backend is running
+./scripts/populate-catalog.sh
+```
+
+Requires `curl` and `python3`. Creates root categories (Eletrônicos, Roupas, Casa, Esportes, Livros, Beleza), subcategories, and many products across them.
+
 - **[AGENTS.md](AGENTS.md)** — Context and rules for AI agents
 - **[docs/architecture.md](docs/architecture.md)** — Service layer (handlers, use cases, repository)
 - **[docs/adr/](docs/adr/)** — Architecture decision records

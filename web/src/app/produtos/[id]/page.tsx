@@ -1,134 +1,184 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { catalogApi, type Product } from "@/lib/api";
-import { ShieldCheck, Truck, Undo2 } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
+
+function RelatedProductCard({ product }: { product: Product }) {
+  const imageUrl = product.images?.[0] || "/placeholder-product.svg";
+
+  return (
+    <Link
+      href={`/produtos/${product.id}`}
+      className="group flex flex-col overflow-hidden rounded-md bg-white shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="flex aspect-square items-center justify-center overflow-hidden border-b border-gray-100 bg-white p-4">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={product.title}
+            className="h-full w-full object-contain transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <span className="text-4xl text-gray-300">📦</span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <p className="text-2xl font-medium text-foreground">R$ {product.price}</p>
+        <p className="mt-1 text-sm font-semibold text-ml-green">Frete grátis</p>
+        <h3 className="mt-2 text-sm font-normal leading-tight text-muted line-clamp-2">
+          {product.title}
+        </h3>
+      </div>
+    </Link>
+  );
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const id = params.id as string;
+  const router = useRouter();
+  const id = params?.id as string | undefined;
+
   const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeImage, setActiveImage] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
-    catalogApi
-      .product(id)
-      .then(setProduct)
+    if (!id) return;
+    setLoading(true);
+    setError("");
+    Promise.all([
+      catalogApi.product(id),
+      catalogApi.relatedProducts(id).then((res) => res.products),
+    ])
+      .then(([p, relatedProducts]) => {
+        setProduct(p);
+        setRelated(relatedProducts);
+        setSelectedImageIndex(0);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : "Erro"))
       .finally(() => setLoading(false));
   }, [id]);
 
+  if (!id) {
+    return null;
+  }
+
   if (loading) {
     return (
-      <div className="pt-12">
-        <div className="h-96 animate-pulse rounded-md bg-white shadow-sm"></div>
+      <div className="pb-12 pt-8">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
+          <div className="mt-8 grid gap-8 md:grid-cols-2">
+            <div className="aspect-square animate-pulse rounded-md bg-gray-200" />
+            <div className="space-y-4">
+              <div className="h-10 w-3/4 animate-pulse rounded bg-gray-200" />
+              <div className="h-8 w-24 animate-pulse rounded bg-gray-200" />
+              <div className="h-32 animate-pulse rounded bg-gray-200" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
+
   if (error || !product) {
     return (
-      <div className="pt-12 text-center">
-        <p className="text-lg text-red-600">{error || "Produto não encontrado"}</p>
-        <Link href="/produtos" className="mt-4 inline-block font-medium text-ml-blue hover:underline">
-          Voltar aos produtos
-        </Link>
+      <div className="pb-12 pt-8">
+        <div className="mx-auto max-w-6xl px-4">
+          <p className="text-red-600">{error || "Produto não encontrado."}</p>
+          <Link href="/produtos" className="mt-4 inline-block text-ml-blue hover:underline">
+            Voltar aos produtos
+          </Link>
+        </div>
       </div>
     );
   }
 
   const images = product.images?.length ? product.images : ["/placeholder-product.svg"];
+  const currentImage = images[selectedImageIndex] ?? images[0];
 
   return (
-    <div className="pb-16 pt-8">
-      <div className="rounded-md bg-white p-6 shadow-sm md:p-8">
-        <div className="grid gap-8 lg:grid-cols-12">
-          
-          {/* Left Column: Images */}
-          <div className="lg:col-span-7 flex gap-4">
-            {/* Thumbnails */}
-            <div className="flex w-16 flex-col gap-2">
-              {images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onMouseEnter={() => setActiveImage(idx)}
-                  className={`aspect-square overflow-hidden rounded-md border-2 p-1 ${activeImage === idx ? "border-ml-blue" : "border-transparent hover:border-gray-300"}`}
-                >
-                  <img src={img} alt="" className="h-full w-full object-contain" />
-                </button>
-              ))}
+    <div className="pb-12 pt-8">
+      <div className="mx-auto max-w-6xl px-4">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="mb-6 flex items-center gap-1 text-sm text-muted hover:text-foreground"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Voltar
+        </button>
+
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Gallery */}
+          <div className="space-y-3">
+            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-4">
+              {currentImage ? (
+                <img
+                  src={currentImage}
+                  alt={product.title}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span className="text-6xl text-gray-300">📦</span>
+              )}
             </div>
-            {/* Main Image */}
-            <div className="flex flex-1 items-center justify-center overflow-hidden rounded-md p-4">
-              <img
-                src={images[activeImage]}
-                alt={product.title}
-                className="max-h-[500px] w-full object-contain"
-              />
-            </div>
+            {images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {images.map((src, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded border-2 bg-white ${
+                      selectedImageIndex === index
+                        ? "border-ml-blue"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {src ? (
+                      <img src={src} alt="" className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-2xl text-gray-300">📦</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Right Column: Info & Buy Box */}
-          <div className="lg:col-span-5 flex flex-col rounded-md border border-gray-200 p-6">
-            <p className="text-sm text-muted">Novo | 123 vendidos</p>
-            <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
+          {/* Info */}
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
               {product.title}
             </h1>
-            
+            <p className="mt-4 text-4xl font-medium text-foreground">R$ {product.price}</p>
+            <p className="mt-1 text-sm font-semibold text-ml-green">Frete grátis</p>
             <div className="mt-6">
-              <p className="text-4xl font-light text-foreground">
-                R$ {product.price}
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                em <span className="font-medium text-ml-green">10x R$ {(Number(product.price) / 10).toFixed(2)} sem juros</span>
-              </p>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <div className="flex items-start gap-3 text-sm">
-                <Truck className="mt-0.5 h-5 w-5 text-ml-green shrink-0" />
-                <div>
-                  <p className="font-medium text-ml-green">Chegará grátis amanhã</p>
-                  <p className="text-muted">Comprando dentro das próximas 2 h</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 text-sm">
-                <Undo2 className="mt-0.5 h-5 w-5 text-ml-blue shrink-0" />
-                <div>
-                  <p className="font-medium text-ml-blue">Devolução grátis</p>
-                  <p className="text-muted">Você tem 30 dias a partir do recebimento</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 text-sm">
-                <ShieldCheck className="mt-0.5 h-5 w-5 text-muted shrink-0" />
-                <div>
-                  <p className="font-medium text-ml-blue">Compra Garantida</p>
-                  <p className="text-muted">Receba o produto que está esperando ou devolvemos o dinheiro</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3">
-              <button className="rounded-md bg-ml-blue py-4 font-semibold text-white transition-colors hover:bg-ml-blue-hover">
-                Comprar agora
-              </button>
-              <button className="rounded-md bg-blue-100 py-4 font-semibold text-ml-blue transition-colors hover:bg-blue-200">
-                Adicionar ao carrinho
-              </button>
+              <h2 className="text-sm font-semibold text-muted">Descrição</h2>
+              <p className="mt-2 whitespace-pre-wrap text-foreground">{product.description}</p>
             </div>
           </div>
         </div>
 
-        {/* Description Section */}
-        <div className="mt-16 border-t border-gray-100 pt-12">
-          <h2 className="text-2xl font-normal text-foreground">Descrição do produto</h2>
-          <p className="mt-6 whitespace-pre-wrap text-lg text-muted leading-relaxed">
-            {product.description}
-          </p>
-        </div>
+        {/* Related products */}
+        {related.length > 0 && (
+          <section className="mt-16">
+            <h2 className="mb-6 text-xl font-semibold text-foreground">
+              Produtos relacionados
+            </h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              {related.map((relatedProduct) => (
+                <RelatedProductCard key={relatedProduct.id} product={relatedProduct} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/ecommerce/services/catalog/internal/domain"
 )
@@ -84,24 +85,60 @@ func (r *PostgresProductRepository) List(filter ListProductsFilter) ([]*domain.P
 		args = append(args, filter.SellerID)
 		placeholder++
 	}
-	if filter.CategoryID != "" {
-		where += fmt.Sprintf(" AND category_id = $%d", placeholder)
+	if filter.ExcludeProductID != "" {
+		where += fmt.Sprintf(" AND id != $%d", placeholder)
+		args = append(args, filter.ExcludeProductID)
+		placeholder++
+	}
+	useCategoryIDs := len(filter.CategoryIDs) > 0
+	if useCategoryIDs {
+		placeholders := make([]string, len(filter.CategoryIDs))
+		for i, categoryID := range filter.CategoryIDs {
+			placeholders[i] = fmt.Sprintf("$%d", placeholder)
+			args = append(args, categoryID)
+			placeholder++
+		}
+		where += " AND category_id IN (" + strings.Join(placeholders, ",") + ")"
+	}
+	categoryPlaceholder := placeholder
+	if filter.CategoryID != "" && !useCategoryIDs {
 		args = append(args, filter.CategoryID)
+		categoryPlaceholder = placeholder
 		placeholder++
 	}
 
+	// When filtering by single category, include category and all descendants (e.g. "Casa e Construção" includes "Decoração", "Móveis").
+	withCategoryCTE := filter.CategoryID != "" && !useCategoryIDs
+	var categoryCondition string
+	if withCategoryCTE {
+		categoryCondition = " AND category_id IN (SELECT id FROM category_and_descendants)"
+	} else {
+		categoryCondition = ""
+	}
+	recursiveCTE := ""
+	if withCategoryCTE {
+		recursiveCTE = fmt.Sprintf(
+			`WITH RECURSIVE category_and_descendants AS (
+				SELECT id FROM categories WHERE id = $%d
+				UNION ALL
+				SELECT c.id FROM categories c INNER JOIN category_and_descendants d ON c.parent_id = d.id
+			) `,
+			categoryPlaceholder,
+		)
+	}
+
+	countQuery := recursiveCTE + `SELECT COUNT(*) FROM products WHERE ` + where + categoryCondition
 	var total int
-	err := r.database.QueryRow(`SELECT COUNT(*) FROM products WHERE `+where, args...).Scan(&total)
+	err := r.database.QueryRow(countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	countArgs := len(args)
 	args = append(args, limit, offset)
-	rows, err := r.database.Query(
-		`SELECT id, seller_id, category_id, title, description, price, images, created_at, updated_at
-		FROM products WHERE `+where+fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, countArgs+1, countArgs+2),
-		args...)
+	listQuery := recursiveCTE + `SELECT id, seller_id, category_id, title, description, price, images, created_at, updated_at
+		FROM products WHERE ` + where + categoryCondition + fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, countArgs+1, countArgs+2)
+	rows, err := r.database.Query(listQuery, args...)
 	if err != nil {
 		return nil, 0, err
 	}

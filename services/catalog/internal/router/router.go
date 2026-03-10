@@ -33,6 +33,7 @@ func NewWithRepositories(categoryRepository repository.CategoryRepository, produ
 	createProductUseCase := usecase.NewCreateProduct(productRepository)
 	listProductsUseCase := usecase.NewListProducts(productRepository)
 	getProductUseCase := usecase.NewGetProduct(productRepository)
+	listRelatedProductsUseCase := usecase.NewListRelatedProducts(productRepository, categoryRepository)
 	updateProductUseCase := usecase.NewUpdateProduct(productRepository)
 	deleteProductUseCase := usecase.NewDeleteProduct(productRepository)
 
@@ -51,6 +52,7 @@ func NewWithRepositories(categoryRepository repository.CategoryRepository, produ
 	router.Route("/v1/products", func(router chi.Router) {
 		router.Post("/", handlers.CreateProduct(createProductUseCase))
 		router.Get("/", handlers.ListProducts(listProductsUseCase))
+		router.Get("/{id}/related", handlers.GetRelatedProducts(listRelatedProductsUseCase))
 		router.Get("/{id}", handlers.GetProduct(getProductUseCase))
 		router.Patch("/{id}", handlers.UpdateProduct(updateProductUseCase))
 		router.Delete("/{id}", handlers.DeleteProduct(deleteProductUseCase))
