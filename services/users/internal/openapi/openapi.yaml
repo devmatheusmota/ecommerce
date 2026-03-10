@@ -3,6 +3,17 @@ info:
   title: Users Service API
   description: Auth, profiles, and addresses for the e-commerce marketplace
   version: 1.0.0
+tags:
+  - name: General
+    description: Health and service status
+  - name: Auth
+    description: Registration and login
+  - name: Password Reset
+    description: Request and confirm password reset
+  - name: Profile
+    description: User profile (requires JWT)
+  - name: Addresses
+    description: User addresses CRUD (requires JWT)
 servers:
   - url: http://localhost:8081
     description: Local (direct)
@@ -11,6 +22,7 @@ servers:
 paths:
   /health:
     get:
+      tags: [General]
       summary: Health check
       operationId: health
       responses:
@@ -32,6 +44,7 @@ paths:
                     example: "1.0.0"
   /register:
     post:
+      tags: [Auth]
       summary: Register a new user
       operationId: register
       requestBody:
@@ -102,6 +115,7 @@ paths:
                     example: email already registered
   /login:
     post:
+      tags: [Auth]
       summary: Login and get JWT
       operationId: login
       requestBody:
@@ -168,6 +182,7 @@ paths:
                     example: failed to login user
   /password-reset/request:
     post:
+      tags: [Password Reset]
       summary: Request password reset
       description: |
         Sends a password reset token for the given email. If the email exists, returns the token (for dev/testing).
@@ -204,6 +219,7 @@ paths:
           description: Invalid email
   /password-reset/confirm:
     post:
+      tags: [Password Reset]
       summary: Confirm password reset
       description: Set new password using the token from request (or email link). Token is single-use and expires (e.g. 1h).
       operationId: confirmPasswordReset
@@ -235,6 +251,7 @@ paths:
                     type: string
   /me:
     get:
+      tags: [Profile]
       summary: Get current user profile
       description: |
         Returns the profile of the authenticated user. Requires a valid JWT:
@@ -299,6 +316,7 @@ paths:
                     type: string
                     example: failed to get user
     patch:
+      tags: [Profile]
       summary: Update current user profile
       description: |
         Updates name, phone, and/or CPF for the authenticated user. Requires a valid JWT.
@@ -386,6 +404,7 @@ paths:
 
   /me/addresses:
     get:
+      tags: [Addresses]
       summary: List current user addresses
       description: Returns all addresses for the authenticated user. Requires JWT.
       operationId: listAddresses
@@ -405,6 +424,7 @@ paths:
         "500":
           description: Server error
     post:
+      tags: [Addresses]
       summary: Create address
       description: Creates a new address for the authenticated user. Type must be billing or shipping. Requires JWT.
       operationId: createAddress
@@ -439,6 +459,7 @@ paths:
 
   /me/addresses/{id}:
     get:
+      tags: [Addresses]
       summary: Get address by ID
       operationId: getAddress
       security:
@@ -464,6 +485,7 @@ paths:
         "500":
           description: Server error
     patch:
+      tags: [Addresses]
       summary: Update address
       operationId: updateAddress
       security:
@@ -497,6 +519,7 @@ paths:
         "500":
           description: Server error
     delete:
+      tags: [Addresses]
       summary: Delete address
       operationId: deleteAddress
       security:

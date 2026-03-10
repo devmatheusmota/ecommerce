@@ -116,7 +116,7 @@ ecommerce/
 ### Implementation checklist (mandatory)
 
 - **Tests**: When you finish an implementation (feature, use case, handler, validation, repository), you **must** add or extend tests for it. No feature is considered done without tests.
-- **OpenAPI**: Every **new HTTP route** (or change in request/response of an existing route) must be documented in the service’s OpenAPI spec (e.g. `services/users/internal/openapi/openapi.yaml`). Keep the spec in sync with the API.
+- **OpenAPI**: Every **new HTTP route** (or change in request/response of an existing route) must be documented in the service’s OpenAPI spec (e.g. `services/users/internal/openapi/openapi.yaml`). Keep the spec in sync with the API. **Tags**: Add `tags: [ResourceName]` to each operation and define tags at the spec root so endpoints are grouped in Apidog/Swagger UI.
 
 ---
 

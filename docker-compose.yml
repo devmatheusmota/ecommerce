@@ -114,6 +114,8 @@ services:
         condition: service_completed_successfully
       users:
         condition: service_healthy
+      catalog:
+        condition: service_healthy
     container_name: ecommerce-kong
     environment:
       KONG_DATABASE: postgres
@@ -146,6 +148,35 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+    networks:
+      - ecommerce-net
+
+  catalog:
+    build:
+      context: .
+      dockerfile: docker/services/catalog/Dockerfile
+      args:
+        VERSION: ${VERSION:-dev}
+    container_name: ecommerce-catalog
+    environment:
+      PORT: "8081"
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_USER: ecommerce
+      PG_PASSWORD: ecommerce_dev
+      PG_DATABASE: catalog
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "8081"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - ecommerce-net
 

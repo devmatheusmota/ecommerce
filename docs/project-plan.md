@@ -33,8 +33,8 @@ Each service owns a bounded context and its own database. Communication: gRPC (s
 - [ ] (Later) OAuth (Google, etc.)
 
 ### 2.2 Catalog
-- [ ] Categories (tree)
-- [ ] Products (title, description, images, price, seller_id, category_id)
+- [x] Categories (tree)
+- [x] Products (title, description, images, price, seller_id, category_id)
 - [ ] Product variants (size, color, etc.)
 - [ ] Product search (by name, category, price range)
 - [ ] Product listing by seller
@@ -202,9 +202,9 @@ Use this as a backlog. Check off as you go.
 - [ ] K8s Deployment + Service
 
 ### Catalog
-- [ ] catalog service skeleton
-- [ ] CRUD categories
-- [ ] CRUD products (with seller_id)
+- [x] catalog service skeleton
+- [x] CRUD categories
+- [x] CRUD products (with seller_id)
 - [ ] GET /products (list, pagination, filters)
 - [ ] gRPC GetProduct, ListProducts
 - [ ] K8s Deployment + Service

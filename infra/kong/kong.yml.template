@@ -22,6 +22,19 @@ services:
           - /health
         strip_path: true
 
+  - name: catalog
+    url: http://catalog:8081
+    routes:
+      - name: catalog-route
+        paths:
+          - /v1/catalog
+        strip_path: true
+        methods:
+          - GET
+          - POST
+          - PATCH
+          - DELETE
+
   - name: users
     url: http://users:8080
     routes:

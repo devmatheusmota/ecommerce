@@ -1,4 +1,4 @@
-.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down kong-test kong-jwt-test test-users cover-users cover-users-html
+.PHONY: up down dev dev-down restart-dev kong-reset logs build build-users build-catalog k8s-apply k8s-delete k8s-status migrate-users-up migrate-users-down migrate-catalog-up migrate-catalog-down kong-test kong-jwt-test test-users test-catalog cover-users cover-users-html cover-catalog
 
 # Version for dev: from latest git tag (e.g. 1.0.1 or 1.0.1-2-gabc123). Exported so docker-compose.dev.yml can use ${VERSION}.
 VERSION := $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo "dev")
@@ -22,6 +22,11 @@ restart-dev:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
+# Create catalog database (run if Postgres was initialized before catalog was added)
+catalog-db-create:
+	docker exec ecommerce-postgres psql -U ecommerce -d postgres -c "CREATE DATABASE catalog;" 2>/dev/null || true
+	@echo "Catalog database ready."
+
 # Remove Kong's DB volume so kong-seed can re-import cleanly. Use when kong-seed fails with "UNIQUE violation on key".
 kong-reset:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
@@ -42,6 +47,14 @@ migrate-users-up:
 
 migrate-users-down:
 	@cd services/users && migrate -path internal/database/migrations -database "$(USERS_DB_URL)" down 1
+
+CATALOG_DB_URL ?= postgres://ecommerce:ecommerce_dev@localhost:5432/catalog?sslmode=disable
+
+migrate-catalog-up:
+	@cd services/catalog && migrate -path internal/database/migrations -database "$(CATALOG_DB_URL)" up
+
+migrate-catalog-down:
+	@cd services/catalog && migrate -path internal/database/migrations -database "$(CATALOG_DB_URL)" down 1
 
 kong-test:
 	@code=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health 2>/dev/null); \
@@ -77,14 +90,24 @@ cover-users-html: cover-users
 	cd services/users && go tool cover -html=coverage.out -o coverage.html
 	@echo "Open services/users/coverage.html in your browser."
 
+test-catalog:
+	cd services/catalog && go test ./... -count=1
+
+cover-catalog:
+	cd services/catalog && go test ./... -coverprofile=coverage.out -count=1 && go tool cover -func=coverage.out
+
 # --- Build (official/release: version from git) ---
-# Builds the users service image with VERSION from git (same as dev). Image tagged as ecommerce-users:$(VERSION).
-# Use for release: make build, then push the image to your registry.
-build: build-users
+# Builds service images with VERSION from git (same as dev).
+# Use for release: make build, then push the images to your registry.
+build: build-users build-catalog
 
 build-users:
 	docker build --build-arg VERSION=$(VERSION) -t ecommerce-users:$(VERSION) -f docker/services/users/Dockerfile .
 	@echo "Built ecommerce-users:$(VERSION)"
+
+build-catalog:
+	docker build --build-arg VERSION=$(VERSION) -t ecommerce-catalog:$(VERSION) -f docker/services/catalog/Dockerfile .
+	@echo "Built ecommerce-catalog:$(VERSION)"
 
 # --- Kubernetes (minikube/kind) ---
 k8s-apply:
